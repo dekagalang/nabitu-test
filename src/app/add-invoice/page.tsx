@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  Alert,
   Box,
   Button,
   Card,
@@ -18,6 +17,7 @@ import {
 import Layout from "../../components/layout"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Toast from "../../components/toast"
 
 interface FormData {
   name: string
@@ -45,7 +45,7 @@ export default function AddInvoicePage() {
     status: "",
   })
   const [errors, setErrors] = useState<FormErrors>({})
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [toastOpen, setToastOpen] = useState(false)
 
   const validateForm = () => {
     const newErrors: FormErrors = {}
@@ -61,10 +61,10 @@ export default function AddInvoicePage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      setShowSuccess(true)
+      setToastOpen(true)
       // Reset form after 2 seconds and redirect to invoices
       setTimeout(() => {
-        setShowSuccess(false)
+        setToastOpen(false)
         router.push("/my-invoices")
       }, 2000)
     }
@@ -95,11 +95,6 @@ export default function AddInvoicePage() {
             <Typography variant="h6" mb={3}>
               Invoice Form
             </Typography>
-            {showSuccess && (
-              <Alert severity="success" sx={{ mb: 3 }}>
-                Invoice added successfully! You can view and manage your invoice in the &apos;My Invoices&apos; section.
-              </Alert>
-            )}
             <form onSubmit={handleSubmit}>
               <Box sx={{ display: "grid", gap: 3 }}>
                 <Box
@@ -183,6 +178,12 @@ export default function AddInvoicePage() {
           </CardContent>
         </Card>
       </Box>
+      <Toast
+        open={toastOpen}
+        onClose={() => setToastOpen(false)}
+        message="Invoice added successfully!"
+        subMessage="You can view and manage your invoice in the 'My Invoices' section."
+      />
     </Layout>
   )
 }
