@@ -30,7 +30,7 @@ import {
 import { MoreVertical, Search, Edit, Trash } from "lucide-react"
 import Layout from "../../components/layout"
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { formatCurrency } from "../../utils/format-currency"
 import Toast from "../../components/toast"
 
@@ -69,40 +69,29 @@ const invoices = [
   },
 ]
 
+type Status = "all" | "Paid" | "Unpaid" | "Pending"
+
 export default function MyInvoicesPage() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const [search, setSearch] = useState(searchParams.get("search") || "")
-  const [status, setStatus] = useState(searchParams.get("status") || "all")
+  // Local state management
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState<Status>("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [toastOpen, setToastOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  const [invoiceList, setInvoiceList] = useState(invoices)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setSearch(value)
-    updateQueryParams("search", value)
+    setSearchQuery(e.target.value)
   }
 
-  const handleStatusChange = (e: { target: { value: string } }) => {
-    const value = e.target.value
-    setStatus(value)
-    updateQueryParams("status", value)
-  }
-
-  const updateQueryParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (value) {
-      params.set(key, value)
-    } else {
-      params.delete(key)
-    }
-    router.push(`/my-invoices?${params.toString()}`)
+  const handleStatusChange = (e: { target: { value: unknown } }) => {
+    setSelectedStatus(e.target.value as Status)
   }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, invoiceId: string) => {
@@ -121,9 +110,12 @@ export default function MyInvoicesPage() {
   }
 
   const handleDeleteConfirm = () => {
-    setDeleteDialogOpen(false)
-    setToastMessage("Invoice deleted successfully")
-    setToastOpen(true)
+    if (selectedInvoice) {
+      setInvoiceList(invoiceList.filter((invoice) => invoice.id !== selectedInvoice))
+      setDeleteDialogOpen(false)
+      setToastMessage("Invoice deleted successfully")
+      setToastOpen(true)
+    }
   }
 
   const handleEditClick = () => {
@@ -133,12 +125,13 @@ export default function MyInvoicesPage() {
     }
   }
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    const matchesSearch = search
-      ? invoice.name.toLowerCase().includes(search.toLowerCase()) ||
-        invoice.number.toLowerCase().includes(search.toLowerCase())
+  // Filter invoices based on search query and selected status
+  const filteredInvoices = invoiceList.filter((invoice) => {
+    const matchesSearch = searchQuery
+      ? invoice.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.number.toLowerCase().includes(searchQuery.toLowerCase())
       : true
-    const matchesStatus = status === "all" ? true : invoice.status === status
+    const matchesStatus = selectedStatus === "all" ? true : invoice.status === selectedStatus
     return matchesSearch && matchesStatus
   })
 
@@ -168,7 +161,7 @@ export default function MyInvoicesPage() {
             <TextField
               size="small"
               placeholder="Search invoices"
-              value={search}
+              value={searchQuery}
               onChange={handleSearchChange}
               fullWidth={isMobile}
               InputProps={{
@@ -181,7 +174,7 @@ export default function MyInvoicesPage() {
             />
             <Select
               size="small"
-              value={status}
+              value={selectedStatus}
               onChange={handleStatusChange}
               fullWidth={isMobile}
               sx={{ minWidth: { sm: 120 } }}
