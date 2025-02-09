@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 import {
   Box,
   Button,
@@ -18,51 +19,46 @@ import Layout from "../../components/layout"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Toast from "../../components/toast"
+import { invoiceSchema, type InvoiceFormData } from "../../schemas/invoice-schema"
+import { ZodError } from "zod"
 
-interface FormData {
-  name: string
-  number: string
-  dueDate: string
-  amount: string
-  status: string
-}
-
-interface FormErrors {
-  name?: string
-  number?: string
-  dueDate?: string
-  amount?: string
-  status?: string
-}
+type FormErrors = Partial<Record<keyof InvoiceFormData, string>>
 
 export default function AddInvoicePage() {
   const router = useRouter()
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<InvoiceFormData>({
     name: "",
     number: "",
     dueDate: "",
     amount: "",
-    status: "",
+    status: "Pending",
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [toastOpen, setToastOpen] = useState(false)
 
   const validateForm = () => {
-    const newErrors: FormErrors = {}
-    if (!formData.name) newErrors.name = "Invoice name is required"
-    if (!formData.number) newErrors.number = "Invoice number is required"
-    if (!formData.dueDate) newErrors.dueDate = "Due date is required"
-    if (!formData.amount) newErrors.amount = "Amount is required"
-    if (!formData.status) newErrors.status = "Status is required"
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    try {
+      invoiceSchema.parse(formData)
+      setErrors({})
+      return true
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors: FormErrors = {}
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            formattedErrors[err.path[0] as keyof InvoiceFormData] = err.message
+          }
+        })
+        setErrors(formattedErrors)
+      }
+      return false
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
       setToastOpen(true)
-      // Reset form after 2 seconds and redirect to invoices
       setTimeout(() => {
         setToastOpen(false)
         router.push("/my-invoices")
@@ -70,18 +66,29 @@ export default function AddInvoicePage() {
     }
   }
 
-  const handleChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
-    setFormData({
-      ...formData,
-      [field]: e.target.value,
-    })
-    // Clear error when user types
-    if (errors[field]) {
-      setErrors({
-        ...errors,
-        [field]: undefined,
+  const handleChange =
+    (field: keyof InvoiceFormData) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
+      const value = e.target.value
+      setFormData({
+        ...formData,
+        [field]: value,
       })
+      if (errors[field]) {
+        setErrors({
+          ...errors,
+          [field]: undefined,
+        })
+      }
     }
+
+  const generateInvoiceNumber = () => {
+    const date = new Date()
+    const year = date.getFullYear().toString().slice(-2)
+    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const random = Math.floor(Math.random() * 100)
+      .toString()
+      .padStart(2, "0")
+    return `INV${year}${month}${random}`
   }
 
   return (
@@ -95,7 +102,7 @@ export default function AddInvoicePage() {
             <Typography variant="h6" mb={3}>
               Invoice Form
             </Typography>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <Box sx={{ display: "grid", gap: 3 }}>
                 <Box
                   sx={{
@@ -120,7 +127,23 @@ export default function AddInvoicePage() {
                     onChange={handleChange("number")}
                     error={!!errors.number}
                     helperText={errors.number}
-                    placeholder="Enter your invoice number"
+                    placeholder="INV000000"
+                    InputProps={{
+                      endAdornment: (
+                        <Button
+                          onClick={() => {
+                            const newNumber = generateInvoiceNumber()
+                            setFormData((prev) => ({ ...prev, number: newNumber }))
+                            if (errors.number) {
+                              setErrors((prev) => ({ ...prev, number: undefined }))
+                            }
+                          }}
+                          size="small"
+                        >
+                          Generate
+                        </Button>
+                      ),
+                    }}
                   />
                 </Box>
                 <Box
@@ -147,7 +170,7 @@ export default function AddInvoicePage() {
                     onChange={handleChange("amount")}
                     error={!!errors.amount}
                     helperText={errors.amount}
-                    placeholder="Enter your invoice amount"
+                    placeholder="Enter amount in Rupiah"
                     InputProps={{
                       startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
                     }}

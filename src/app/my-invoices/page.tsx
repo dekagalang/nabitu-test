@@ -1,10 +1,18 @@
 "use client"
 
+import type React from "react"
 import {
   Box,
+  Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
   InputAdornment,
+  Menu,
   MenuItem,
   Paper,
   Select,
@@ -19,43 +27,120 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material"
-import { MoreVertical, Search } from "lucide-react"
+import { MoreVertical, Search, Edit, Trash } from "lucide-react"
 import Layout from "../../components/layout"
+import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { formatCurrency } from "../../utils/format-currency"
+import Toast from "../../components/toast"
 
 const invoices = [
   {
     id: "INV202501",
     name: "Internet Subscription",
+    number: "INV202501",
     dueDate: "Jan 13,2025",
     status: "Paid",
-    amount: "Rp 582.901",
+    amount: "582901",
   },
   {
     id: "INV202502",
     name: "Electricity Bill",
+    number: "INV202502",
     dueDate: "Feb 04,2025",
     status: "Paid",
-    amount: "Rp 311.909",
+    amount: "311909",
   },
   {
     id: "INV202503",
     name: "Gym Membership",
+    number: "INV202503",
     dueDate: "Feb 23,2025",
     status: "Unpaid",
-    amount: "Rp 425.000",
+    amount: "425000",
   },
   {
     id: "INV202504",
     name: "Phone Bill",
+    number: "INV202504",
     dueDate: "Feb 23,2025",
     status: "Pending",
-    amount: "Rp 148.891",
+    amount: "148891",
   },
 ]
 
 export default function MyInvoicesPage() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [search, setSearch] = useState(searchParams.get("search") || "")
+  const [status, setStatus] = useState(searchParams.get("status") || "all")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [toastOpen, setToastOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearch(value)
+    updateQueryParams("search", value)
+  }
+
+  const handleStatusChange = (e: { target: { value: string } }) => {
+    const value = e.target.value
+    setStatus(value)
+    updateQueryParams("status", value)
+  }
+
+  const updateQueryParams = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (value) {
+      params.set(key, value)
+    } else {
+      params.delete(key)
+    }
+    router.push(`/my-invoices?${params.toString()}`)
+  }
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, invoiceId: string) => {
+    setAnchorEl(event.currentTarget)
+    setSelectedInvoice(invoiceId)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+    setSelectedInvoice(null)
+  }
+
+  const handleDeleteClick = () => {
+    handleMenuClose()
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    setDeleteDialogOpen(false)
+    setToastMessage("Invoice deleted successfully")
+    setToastOpen(true)
+  }
+
+  const handleEditClick = () => {
+    handleMenuClose()
+    if (selectedInvoice) {
+      router.push(`/edit-invoice/${selectedInvoice}`)
+    }
+  }
+
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch = search
+      ? invoice.name.toLowerCase().includes(search.toLowerCase()) ||
+        invoice.number.toLowerCase().includes(search.toLowerCase())
+      : true
+    const matchesStatus = status === "all" ? true : invoice.status === status
+    return matchesSearch && matchesStatus
+  })
 
   return (
     <Layout>
@@ -82,7 +167,9 @@ export default function MyInvoicesPage() {
           >
             <TextField
               size="small"
-              placeholder="Search"
+              placeholder="Search invoices"
+              value={search}
+              onChange={handleSearchChange}
               fullWidth={isMobile}
               InputProps={{
                 startAdornment: (
@@ -92,11 +179,17 @@ export default function MyInvoicesPage() {
                 ),
               }}
             />
-            <Select size="small" defaultValue="all" fullWidth={isMobile} sx={{ minWidth: { sm: 120 } }}>
+            <Select
+              size="small"
+              value={status}
+              onChange={handleStatusChange}
+              fullWidth={isMobile}
+              sx={{ minWidth: { sm: 120 } }}
+            >
               <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="paid">Paid</MenuItem>
-              <MenuItem value="unpaid">Unpaid</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="Paid">Paid</MenuItem>
+              <MenuItem value="Unpaid">Unpaid</MenuItem>
+              <MenuItem value="Pending">Pending</MenuItem>
             </Select>
           </Box>
         </Box>
@@ -113,12 +206,12 @@ export default function MyInvoicesPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {invoices.map((invoice) => (
+                {filteredInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell>
                       <Typography variant="subtitle2">{invoice.name}</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {invoice.id}
+                        {invoice.number}
                       </Typography>
                     </TableCell>
                     <TableCell>{invoice.dueDate}</TableCell>
@@ -145,9 +238,9 @@ export default function MyInvoicesPage() {
                         }}
                       />
                     </TableCell>
-                    <TableCell>{invoice.amount}</TableCell>
+                    <TableCell>{formatCurrency(invoice.amount)}</TableCell>
                     <TableCell align="right">
-                      <IconButton size="small">
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, invoice.id)}>
                         <MoreVertical className="h-5 w-5" />
                       </IconButton>
                     </TableCell>
@@ -158,6 +251,34 @@ export default function MyInvoicesPage() {
           </TableContainer>
         </Paper>
       </Box>
+
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+        <MenuItem onClick={handleEditClick}>
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
+        </MenuItem>
+        <MenuItem onClick={handleDeleteClick} sx={{ color: "error.main" }}>
+          <Trash className="h-4 w-4 mr-2" />
+          Delete
+        </MenuItem>
+      </Menu>
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Invoice</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this invoice? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Toast open={toastOpen} onClose={() => setToastOpen(false)} message={toastMessage} severity="success" />
     </Layout>
   )
 }
