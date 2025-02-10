@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 import {
   Box,
   Button,
@@ -26,116 +26,71 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-} from "@mui/material";
-import { MoreVertical, Search, Edit, Trash } from "lucide-react";
-import Layout from "../../components/layout";
-import { useState, useEffect, useCallback } from "react";
-import { formatCurrency } from "../../utils/format-currency";
-import Toast from "../../components/toast";
+} from "@mui/material"
+import { MoreVertical, Search, Edit, Trash } from "lucide-react"
+import Layout from "../../../components/invoices/layout"
+import { useState } from "react"
+import { formatCurrency } from "../../../utils/format-currency"
+import Toast from "../../../components/invoices/toast"
+import { useInvoices } from "../../../hooks/useInvoices"
+import { useInvoiceActions } from "../../../hooks/useInvoiceActions"
 
-type Status = "all" | "Paid" | "Unpaid" | "Pending";
-
-interface Invoice {
-  _id: string;
-  name: string;
-  number: string;
-  dueDate: string;
-  status: "Paid" | "Unpaid" | "Pending";
-  amount: string;
-}
+type Status = "all" | "Paid" | "Unpaid" | "Pending"
 
 export default function MyInvoicesPage() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<Status>("all");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    invoices,
+    isLoading,
+    searchQuery,
+    setSearchQuery,
+    selectedStatus,
+    setSelectedStatus,
+    deleteInvoice,
+    refetchInvoices,
+  } = useInvoices()
 
-  const fetchInvoices = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `/api/invoices?search=${searchQuery}&status=${selectedStatus}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch invoices");
-      }
-      const data = await response.json();
-      setInvoices(data);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery, selectedStatus]);
+  const {
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    selectedInvoice,
+    anchorEl,
+    // setAnchorEl, // Added setAnchorEl
+    handleMenuOpen,
+    handleMenuClose,
+    handleDeleteClick,
+  } = useInvoiceActions()
 
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
+  const [toastOpen, setToastOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
+  const [toastSeverity, setToastSeverity] = useState<"success" | "error">("success")
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+    setSearchQuery(e.target.value)
+  }
 
   const handleStatusChange = (e: { target: { value: unknown } }) => {
-    setSelectedStatus(e.target.value as Status);
-  };
-
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    invoiceId: string
-  ) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedInvoice(invoiceId);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleDeleteClick = () => {
-    handleMenuClose();
-    setDeleteDialogOpen(true);
-  };
+    setSelectedStatus(e.target.value as Status)
+  }
 
   const handleDeleteConfirm = async () => {
     if (selectedInvoice) {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/invoices/${selectedInvoice}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to delete invoice");
-        }
-
-        setInvoices(
-          invoices.filter((invoice) => invoice._id !== selectedInvoice)
-        );
-        setDeleteDialogOpen(false);
-        setToastMessage("Invoice deleted successfully");
-        setToastOpen(true);
-      } catch (error) {
-        console.error("Error deleting invoice:", error);
-        setToastMessage("Failed to delete invoice");
-        setToastOpen(true);
-      } finally {
-        setIsLoading(false);
+      const result = await deleteInvoice(selectedInvoice)
+      setDeleteDialogOpen(false)
+      setToastMessage(result.message)
+      setToastSeverity(result.success ? "success" : "error")
+      setToastOpen(true)
+      if (result.success) {
+        refetchInvoices()
       }
     }
-  };
+  }
 
   const handleEditClick = () => {
-    handleMenuClose();
-  };
+    handleMenuClose()
+  }
 
   return (
     <Layout>
@@ -189,9 +144,7 @@ export default function MyInvoicesPage() {
           </Box>
         </Box>
         <Paper sx={{ overflow: "hidden" }}>
-          <TableContainer
-            sx={{ maxHeight: { xs: "calc(100vh - 300px)", sm: "none" } }}
-          >
+          <TableContainer sx={{ maxHeight: { xs: "calc(100vh - 300px)", sm: "none" } }}>
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow>
@@ -219,9 +172,7 @@ export default function MyInvoicesPage() {
                   invoices.map((invoice) => (
                     <TableRow key={invoice._id}>
                       <TableCell>
-                        <Typography variant="subtitle2">
-                          {invoice.name}
-                        </Typography>
+                        <Typography variant="subtitle2">{invoice.name}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {invoice.number}
                         </Typography>
@@ -232,34 +183,27 @@ export default function MyInvoicesPage() {
                           label={invoice.status}
                           size="small"
                           color={
-                            invoice.status === "Paid"
-                              ? "success"
-                              : invoice.status === "Unpaid"
-                              ? "error"
-                              : "warning"
+                            invoice.status === "Paid" ? "success" : invoice.status === "Unpaid" ? "error" : "warning"
                           }
                           sx={{
                             backgroundColor:
                               invoice.status === "Paid"
                                 ? "rgba(84, 214, 44, 0.16)"
                                 : invoice.status === "Unpaid"
-                                ? "rgba(255, 72, 66, 0.16)"
-                                : "rgba(255, 193, 7, 0.16)",
+                                  ? "rgba(255, 72, 66, 0.16)"
+                                  : "rgba(255, 193, 7, 0.16)",
                             color:
                               invoice.status === "Paid"
                                 ? "rgb(34, 154, 22)"
                                 : invoice.status === "Unpaid"
-                                ? "rgb(183, 33, 54)"
-                                : "rgb(183, 129, 3)",
+                                  ? "rgb(183, 33, 54)"
+                                  : "rgb(183, 129, 3)",
                           }}
                         />
                       </TableCell>
                       <TableCell>{formatCurrency(invoice.amount)}</TableCell>
                       <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleMenuOpen(e, invoice._id)}
-                        >
+                        <IconButton size="small" onClick={(e) => handleMenuOpen(e, invoice._id)}>
                           <MoreVertical className="h-5 w-5" />
                         </IconButton>
                       </TableCell>
@@ -272,11 +216,7 @@ export default function MyInvoicesPage() {
         </Paper>
       </Box>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         <MenuItem onClick={handleEditClick}>
           <Edit className="h-4 w-4 mr-2" />
           Edit
@@ -287,15 +227,11 @@ export default function MyInvoicesPage() {
         </MenuItem>
       </Menu>
 
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Invoice</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this invoice? This action cannot be
-            undone.
+            Are you sure you want to delete this invoice? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -306,12 +242,8 @@ export default function MyInvoicesPage() {
         </DialogActions>
       </Dialog>
 
-      <Toast
-        open={toastOpen}
-        onClose={() => setToastOpen(false)}
-        message={toastMessage}
-        severity="success"
-      />
+      <Toast open={toastOpen} onClose={() => setToastOpen(false)} message={toastMessage} severity={toastSeverity} />
     </Layout>
-  );
+  )
 }
+

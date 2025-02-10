@@ -15,14 +15,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import Layout from "../../components/layout";
+import Layout from "../../../components/invoices/layout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Toast from "../../components/toast";
+import Toast from "../../../components/invoices/toast";
 import {
   invoiceSchema,
   type InvoiceFormData,
-} from "../../schemas/invoice-schema";
+} from "../../../lib/schemas/invoice-schema";
 import { ZodError } from "zod";
 
 type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
@@ -93,7 +93,7 @@ export default function AddInvoicePage() {
         setToastOpen(true);
         setTimeout(() => {
           setToastOpen(false);
-          router.push("/my-invoices");
+          router.push("/invoices/list");
         }, 2000);
       } catch (error) {
         console.error("Error adding invoice:", error);

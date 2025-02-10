@@ -48,8 +48,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
       <List>
         <ListItem disablePadding>
           <ListItemButton
-            selected={pathname === "/add-invoice"}
-            onClick={() => handleNavigation("/add-invoice")}
+            selected={pathname === "/invoices/add"}
+            onClick={() => handleNavigation("/invoices/add")}
           >
             <ListItemIcon>
               <Plus className="h-5 w-5 text-white" />
@@ -59,8 +59,8 @@ export default function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton
-            selected={pathname === "/my-invoices"}
-            onClick={() => handleNavigation("/my-invoices")}
+            selected={pathname === "/invoices/list"}
+            onClick={() => handleNavigation("/invoices/list")}
           >
             <ListItemIcon>
               <FileText className="h-5 w-5 text-white" />

@@ -7,7 +7,7 @@ export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/my-invoices");
+    router.replace("/invoices/list");
   }, [router]);
 
   return null;
