@@ -7,6 +7,5 @@ export function formatCurrency(amount: string | number): string {
   })
     .format(Number(amount))
     .replace("IDR", "Rp")
-    .trim()
+    .trim();
 }
-

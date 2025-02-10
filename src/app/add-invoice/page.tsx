@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 import {
   Box,
   Button,
@@ -14,52 +14,69 @@ import {
   Select,
   TextField,
   Typography,
-} from "@mui/material"
-import Layout from "../../components/layout"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Toast from "../../components/toast"
-import { invoiceSchema, type InvoiceFormData } from "../../schemas/invoice-schema"
-import { ZodError } from "zod"
+} from "@mui/material";
+import Layout from "../../components/layout";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Toast from "../../components/toast";
+import {
+  invoiceSchema,
+  type InvoiceFormData,
+} from "../../schemas/invoice-schema";
+import { ZodError } from "zod";
 
-type FormErrors = Partial<Record<keyof InvoiceFormData, string>>
+type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
 
 export default function AddInvoicePage() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState<InvoiceFormData>({
     name: "",
     number: "",
     dueDate: "",
     amount: "",
     status: "Pending",
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [toastOpen, setToastOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [toastOpen, setToastOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const newNumber = generateInvoiceNumber();
+    setFormData((prev) => ({
+      ...prev,
+      number: newNumber,
+    }));
+    if (errors.number) {
+      setErrors((prev) => ({
+        ...prev,
+        number: undefined,
+      }));
+    }
+  }, [errors.number]);
 
   const validateForm = () => {
     try {
-      invoiceSchema.parse(formData)
-      setErrors({})
-      return true
+      invoiceSchema.parse(formData);
+      setErrors({});
+      return true;
     } catch (error) {
       if (error instanceof ZodError) {
-        const formattedErrors: FormErrors = {}
+        const formattedErrors: FormErrors = {};
         error.errors.forEach((err) => {
           if (err.path[0]) {
-            formattedErrors[err.path[0] as keyof InvoiceFormData] = err.message
+            formattedErrors[err.path[0] as keyof InvoiceFormData] = err.message;
           }
-        })
-        setErrors(formattedErrors)
+        });
+        setErrors(formattedErrors);
       }
-      return false
+      return false;
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
       try {
         const response = await fetch("/api/invoices", {
           method: "POST",
@@ -67,50 +84,50 @@ export default function AddInvoicePage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
-        })
+        });
 
         if (!response.ok) {
-          throw new Error("Failed to add invoice")
+          throw new Error("Failed to add invoice");
         }
 
-        setToastOpen(true)
+        setToastOpen(true);
         setTimeout(() => {
-          setToastOpen(false)
-          router.push("/my-invoices")
-        }, 2000)
+          setToastOpen(false);
+          router.push("/my-invoices");
+        }, 2000);
       } catch (error) {
-        console.error("Error adding invoice:", error)
-        // Handle error (e.g., show error toast)
+        console.error("Error adding invoice:", error);
       } finally {
-        setIsSubmitting(false)
+        setIsSubmitting(false);
       }
     }
-  }
+  };
 
   const handleChange =
-    (field: keyof InvoiceFormData) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
-      const value = e.target.value
+    (field: keyof InvoiceFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
+      const value = e.target.value;
       setFormData({
         ...formData,
         [field]: value,
-      })
+      });
       if (errors[field]) {
         setErrors({
           ...errors,
           [field]: undefined,
-        })
+        });
       }
-    }
+    };
 
   const generateInvoiceNumber = () => {
-    const date = new Date()
-    const year = date.getFullYear().toString().slice(-2)
-    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const random = Math.floor(Math.random() * 100)
       .toString()
-      .padStart(2, "0")
-    return `INV${year}${month}${random}`
-  }
+      .padStart(2, "0");
+    return `INV${year}${month}${random}`;
+  };
 
   return (
     <Layout>
@@ -153,10 +170,16 @@ export default function AddInvoicePage() {
                       endAdornment: (
                         <Button
                           onClick={() => {
-                            const newNumber = generateInvoiceNumber()
-                            setFormData((prev) => ({ ...prev, number: newNumber }))
+                            const newNumber = generateInvoiceNumber();
+                            setFormData((prev) => ({
+                              ...prev,
+                              number: newNumber,
+                            }));
                             if (errors.number) {
-                              setErrors((prev) => ({ ...prev, number: undefined }))
+                              setErrors((prev) => ({
+                                ...prev,
+                                number: undefined,
+                              }));
                             }
                           }}
                           size="small"
@@ -193,7 +216,9 @@ export default function AddInvoicePage() {
                     helperText={errors.amount}
                     placeholder="Enter amount in Rupiah"
                     InputProps={{
-                      startAdornment: <InputAdornment position="start">Rp</InputAdornment>,
+                      startAdornment: (
+                        <InputAdornment position="start">Rp</InputAdornment>
+                      ),
                     }}
                   />
                 </Box>
@@ -204,16 +229,30 @@ export default function AddInvoicePage() {
                     label="Status"
                     required
                     value={formData.status}
-                    onChange={(e) => handleChange("status")(e as React.ChangeEvent<{ value: string }>)}
+                    onChange={(e) =>
+                      handleChange("status")(
+                        e as React.ChangeEvent<{ value: string }>
+                      )
+                    }
                   >
                     <MenuItem value="Paid">Paid</MenuItem>
                     <MenuItem value="Unpaid">Unpaid</MenuItem>
                     <MenuItem value="Pending">Pending</MenuItem>
                   </Select>
-                  {errors.status && <FormHelperText>{errors.status}</FormHelperText>}
+                  {errors.status && (
+                    <FormHelperText>{errors.status}</FormHelperText>
+                  )}
                 </FormControl>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-                  <Button type="submit" variant="contained" size="large" sx={{ minWidth: 200 }} disabled={isSubmitting}>
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
+                >
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    sx={{ minWidth: 200 }}
+                    disabled={isSubmitting}
+                  >
                     {isSubmitting ? "Adding..." : "+ Add Invoice"}
                   </Button>
                 </Box>
@@ -229,6 +268,5 @@ export default function AddInvoicePage() {
         subMessage="You can view and manage your invoice in the 'My Invoices' section."
       />
     </Layout>
-  )
+  );
 }
-

@@ -1,11 +1,19 @@
-"use client"
+"use client";
 
-import { AppBar, Avatar, Box, IconButton, Stack, Toolbar, Typography } from "@mui/material"
-import { Bell, FileText, Menu } from "lucide-react"
+import {
+  AppBar,
+  Avatar,
+  Box,
+  IconButton,
+  Stack,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import { Bell, FileText, Menu } from "lucide-react";
 
 interface HeaderProps {
-  onMenuClick: () => void
-  isMobile: boolean
+  onMenuClick: () => void;
+  isMobile: boolean;
 }
 
 export default function Header({ onMenuClick, isMobile }: HeaderProps) {
@@ -54,13 +62,12 @@ export default function Header({ onMenuClick, isMobile }: HeaderProps) {
               </Typography>
             </Box>
             <Avatar
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-02-08%20153527-ha5tKvi1KrbLJQEIaDOLz1BsjxxFIh.png"
+              src="https://placehold.co/400x400/png"
               sx={{ width: 32, height: 32 }}
             />
           </Box>
         </Stack>
       </Toolbar>
     </AppBar>
-  )
+  );
 }
-

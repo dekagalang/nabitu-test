@@ -1,16 +1,22 @@
-"use client"
+"use client";
 
-import { Alert, type AlertColor, Snackbar } from "@mui/material"
+import { Alert, type AlertColor, Snackbar } from "@mui/material";
 
 interface ToastProps {
-  open: boolean
-  onClose: () => void
-  message: string
-  subMessage?: string
-  severity?: AlertColor
+  open: boolean;
+  onClose: () => void;
+  message: string;
+  subMessage?: string;
+  severity?: AlertColor;
 }
 
-export default function Toast({ open, onClose, message, subMessage, severity = "success" }: ToastProps) {
+export default function Toast({
+  open,
+  onClose,
+  message,
+  subMessage,
+  severity = "success",
+}: ToastProps) {
   return (
     <Snackbar
       open={open}
@@ -24,7 +30,8 @@ export default function Toast({ open, onClose, message, subMessage, severity = "
         sx={{
           width: "100%",
           minWidth: "300px",
-          backgroundColor: severity === "success" ? "rgb(229, 255, 241)" : undefined,
+          backgroundColor:
+            severity === "success" ? "rgb(229, 255, 241)" : undefined,
           color: severity === "success" ? "rgb(14, 156, 85)" : undefined,
           "& .MuiAlert-icon": {
             color: severity === "success" ? "rgb(14, 156, 85)" : undefined,
@@ -33,10 +40,15 @@ export default function Toast({ open, onClose, message, subMessage, severity = "
       >
         <div>
           {message}
-          {subMessage && <div style={{ fontSize: "0.875rem", marginTop: "4px", opacity: 0.8 }}>{subMessage}</div>}
+          {subMessage && (
+            <div
+              style={{ fontSize: "0.875rem", marginTop: "4px", opacity: 0.8 }}
+            >
+              {subMessage}
+            </div>
+          )}
         </div>
       </Alert>
     </Snackbar>
-  )
+  );
 }
-

@@ -30,7 +30,6 @@ import {
 import { MoreVertical, Search, Edit, Trash } from "lucide-react";
 import Layout from "../../components/layout";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { formatCurrency } from "../../utils/format-currency";
 import Toast from "../../components/toast";
 
@@ -48,7 +47,6 @@ interface Invoice {
 export default function MyInvoicesPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<Status>("all");
@@ -73,7 +71,6 @@ export default function MyInvoicesPage() {
       setInvoices(data);
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      // Handle error (e.g., show error toast)
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +78,7 @@ export default function MyInvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
-  }, [fetchInvoices]); //Corrected dependency array
+  }, [fetchInvoices]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -101,7 +98,6 @@ export default function MyInvoicesPage() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedInvoice(null);
   };
 
   const handleDeleteClick = () => {
@@ -111,6 +107,7 @@ export default function MyInvoicesPage() {
 
   const handleDeleteConfirm = async () => {
     if (selectedInvoice) {
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/invoices/${selectedInvoice}`, {
           method: "DELETE",
@@ -130,15 +127,14 @@ export default function MyInvoicesPage() {
         console.error("Error deleting invoice:", error);
         setToastMessage("Failed to delete invoice");
         setToastOpen(true);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
   const handleEditClick = () => {
     handleMenuClose();
-    if (selectedInvoice) {
-      router.push(`/edit-invoice/${selectedInvoice}`);
-    }
   };
 
   return (

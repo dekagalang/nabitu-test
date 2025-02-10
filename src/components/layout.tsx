@@ -1,10 +1,16 @@
-"use client"
+"use client";
 
-import { Box, CssBaseline, ThemeProvider, createTheme, useMediaQuery } from "@mui/material"
-import Header from "./header"
-import Sidebar from "./sidebar"
-import type React from "react"
-import { useState } from "react"
+import {
+  Box,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
+  useMediaQuery,
+} from "@mui/material";
+import Header from "./header";
+import Sidebar from "./sidebar";
+import type React from "react";
+import { useState } from "react";
 
 const theme = createTheme({
   palette: {
@@ -15,15 +21,15 @@ const theme = createTheme({
       default: "#f8f9fc",
     },
   },
-})
+});
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"))
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen)
-  }
+    setMobileOpen(!mobileOpen);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -45,6 +51,5 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </Box>
       </Box>
     </ThemeProvider>
-  )
+  );
 }
-
