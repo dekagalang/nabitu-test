@@ -62,7 +62,6 @@ export default function MyInvoicesPage() {
     setDeleteDialogOpen,
     selectedInvoice,
     anchorEl,
-    // setAnchorEl, // Added setAnchorEl
     handleMenuOpen,
     handleMenuClose,
     handleDeleteClick,

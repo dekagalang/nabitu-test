@@ -40,7 +40,6 @@ export function useInvoices() {
       setInvoices(data);
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      // You might want to handle this error in the component
     } finally {
       setIsLoading(false);
     }
