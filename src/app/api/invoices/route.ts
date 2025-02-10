@@ -1,25 +1,26 @@
 import { NextResponse } from "next/server";
 import clientPromise from "../../../utils/mongodb";
+import { type InvoiceFilterStatus } from "../../../constants/invoice";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
-    const status = searchParams.get("status");
+    const status = searchParams.get("status") as InvoiceFilterStatus;
 
     const client = await clientPromise;
     const db = client.db("nabitu_db");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query: any = {};
+    const query: any = {};
+
     if (search) {
-      query = {
-        $or: [
-          { name: { $regex: search, $options: "i" } },
-          { number: { $regex: search, $options: "i" } },
-        ],
-      };
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { number: { $regex: search, $options: "i" } },
+      ];
     }
+
     if (status && status !== "all") {
       query.status = status;
     }
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(invoices);
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

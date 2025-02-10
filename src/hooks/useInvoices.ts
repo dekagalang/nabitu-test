@@ -1,54 +1,72 @@
-"use client"
+"use client";
 
-import { Invoice } from "@/lib/types"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react";
+import {
+  type InvoiceStatus,
+  type InvoiceFilterStatus,
+  INVOICE_FILTER_STATUS,
+} from "../constants/invoice";
+import { API_ROUTES } from "@/constants/api";
 
-type Status = "all" | "Paid" | "Unpaid" | "Pending"
+interface Invoice {
+  _id: string;
+  name: string;
+  number: string;
+  dueDate: string;
+  status: InvoiceStatus;
+  amount: string;
+}
+
+type Status = InvoiceFilterStatus;
 
 export function useInvoices() {
-  const [invoices, setInvoices] = useState<Invoice[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState<Status>("all")
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<Status>(
+    INVOICE_FILTER_STATUS.ALL
+  );
 
   const fetchInvoices = useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const response = await fetch(`/api/invoices?search=${searchQuery}&status=${selectedStatus}`)
+      const response = await fetch(
+        `${API_ROUTES.INVOICES}?search=${searchQuery}&status=${selectedStatus}`
+      );
       if (!response.ok) {
-        throw new Error("Failed to fetch invoices")
+        throw new Error("Failed to fetch invoices");
       }
-      const data = await response.json()
-      setInvoices(data)
+      const data = await response.json();
+      setInvoices(data);
     } catch (error) {
-      console.error("Error fetching invoices:", error)
+      console.error("Error fetching invoices:", error);
       // You might want to handle this error in the component
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [searchQuery, selectedStatus])
+  }, [searchQuery, selectedStatus]);
 
   useEffect(() => {
-    fetchInvoices()
-  }, [fetchInvoices])
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   const deleteInvoice = async (invoiceId: string) => {
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}`, {
+      const response = await fetch(API_ROUTES.INVOICE(invoiceId), {
         method: "DELETE",
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete invoice")
+        throw new Error("Failed to delete invoice");
       }
 
-      setInvoices(invoices.filter((invoice) => invoice._id !== invoiceId))
-      return { success: true, message: "Invoice deleted successfully" }
+      setInvoices(invoices.filter((invoice) => invoice._id !== invoiceId));
+      return { success: true, message: "Invoice deleted successfully" };
     } catch (error) {
-      console.error("Error deleting invoice:", error)
-      return { success: false, message: "Failed to delete invoice" }
+      console.error("Error deleting invoice:", error);
+      return { success: false, message: "Failed to delete invoice" };
     }
-  }
+  };
 
   return {
     invoices,
@@ -59,6 +77,5 @@ export function useInvoices() {
     setSelectedStatus,
     deleteInvoice,
     refetchInvoices: fetchInvoices,
-  }
+  };
 }
-

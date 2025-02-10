@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 import {
   Box,
   Button,
@@ -26,20 +26,25 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-} from "@mui/material"
-import { MoreVertical, Search, Edit, Trash } from "lucide-react"
-import Layout from "../../../components/invoices/layout"
-import { useState } from "react"
-import { formatCurrency } from "../../../utils/format-currency"
-import Toast from "../../../components/invoices/toast"
-import { useInvoices } from "../../../hooks/useInvoices"
-import { useInvoiceActions } from "../../../hooks/useInvoiceActions"
+} from "@mui/material";
+import { MoreVertical, Search, Edit, Trash } from "lucide-react";
+import Layout from "../../../components/invoices/layout";
+import { useState } from "react";
+import { formatCurrency } from "../../../utils/format-currency";
+import Toast from "../../../components/invoices/toast";
+import { useInvoices } from "../../../hooks/useInvoices";
+import { useInvoiceActions } from "../../../hooks/useInvoiceActions";
+import {
+  INVOICE_FILTER_STATUS,
+  INVOICE_STATUS_COLORS,
+  type InvoiceFilterStatus,
+} from "../../../constants/invoice";
 
-type Status = "all" | "Paid" | "Unpaid" | "Pending"
+type Status = InvoiceFilterStatus;
 
 export default function MyInvoicesPage() {
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const {
     invoices,
@@ -50,7 +55,7 @@ export default function MyInvoicesPage() {
     setSelectedStatus,
     deleteInvoice,
     refetchInvoices,
-  } = useInvoices()
+  } = useInvoices();
 
   const {
     deleteDialogOpen,
@@ -61,36 +66,38 @@ export default function MyInvoicesPage() {
     handleMenuOpen,
     handleMenuClose,
     handleDeleteClick,
-  } = useInvoiceActions()
+  } = useInvoiceActions();
 
-  const [toastOpen, setToastOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState("")
-  const [toastSeverity, setToastSeverity] = useState<"success" | "error">("success")
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastSeverity, setToastSeverity] = useState<"success" | "error">(
+    "success"
+  );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-  }
+    setSearchQuery(e.target.value);
+  };
 
   const handleStatusChange = (e: { target: { value: unknown } }) => {
-    setSelectedStatus(e.target.value as Status)
-  }
+    setSelectedStatus(e.target.value as Status);
+  };
 
   const handleDeleteConfirm = async () => {
     if (selectedInvoice) {
-      const result = await deleteInvoice(selectedInvoice)
-      setDeleteDialogOpen(false)
-      setToastMessage(result.message)
-      setToastSeverity(result.success ? "success" : "error")
-      setToastOpen(true)
+      const result = await deleteInvoice(selectedInvoice);
+      setDeleteDialogOpen(false);
+      setToastMessage(result.message);
+      setToastSeverity(result.success ? "success" : "error");
+      setToastOpen(true);
       if (result.success) {
-        refetchInvoices()
+        refetchInvoices();
       }
     }
-  }
+  };
 
   const handleEditClick = () => {
-    handleMenuClose()
-  }
+    handleMenuClose();
+  };
 
   return (
     <Layout>
@@ -136,15 +143,18 @@ export default function MyInvoicesPage() {
               fullWidth={isMobile}
               sx={{ minWidth: { sm: 120 } }}
             >
-              <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="Paid">Paid</MenuItem>
-              <MenuItem value="Unpaid">Unpaid</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
+              {Object.entries(INVOICE_FILTER_STATUS).map(([key, value]) => (
+                <MenuItem key={value} value={value}>
+                  {key === "ALL" ? "All Status" : key}
+                </MenuItem>
+              ))}{" "}
             </Select>
           </Box>
         </Box>
         <Paper sx={{ overflow: "hidden" }}>
-          <TableContainer sx={{ maxHeight: { xs: "calc(100vh - 300px)", sm: "none" } }}>
+          <TableContainer
+            sx={{ maxHeight: { xs: "calc(100vh - 300px)", sm: "none" } }}
+          >
             <Table sx={{ minWidth: 650 }}>
               <TableHead>
                 <TableRow>
@@ -172,7 +182,9 @@ export default function MyInvoicesPage() {
                   invoices.map((invoice) => (
                     <TableRow key={invoice._id}>
                       <TableCell>
-                        <Typography variant="subtitle2">{invoice.name}</Typography>
+                        <Typography variant="subtitle2">
+                          {invoice.name}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {invoice.number}
                         </Typography>
@@ -182,28 +194,20 @@ export default function MyInvoicesPage() {
                         <Chip
                           label={invoice.status}
                           size="small"
-                          color={
-                            invoice.status === "Paid" ? "success" : invoice.status === "Unpaid" ? "error" : "warning"
-                          }
+                          color={INVOICE_STATUS_COLORS[invoice.status].chip}
                           sx={{
                             backgroundColor:
-                              invoice.status === "Paid"
-                                ? "rgba(84, 214, 44, 0.16)"
-                                : invoice.status === "Unpaid"
-                                  ? "rgba(255, 72, 66, 0.16)"
-                                  : "rgba(255, 193, 7, 0.16)",
-                            color:
-                              invoice.status === "Paid"
-                                ? "rgb(34, 154, 22)"
-                                : invoice.status === "Unpaid"
-                                  ? "rgb(183, 33, 54)"
-                                  : "rgb(183, 129, 3)",
+                              INVOICE_STATUS_COLORS[invoice.status].background,
+                            color: INVOICE_STATUS_COLORS[invoice.status].text,
                           }}
                         />
                       </TableCell>
                       <TableCell>{formatCurrency(invoice.amount)}</TableCell>
                       <TableCell align="right">
-                        <IconButton size="small" onClick={(e) => handleMenuOpen(e, invoice._id)}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, invoice._id)}
+                        >
                           <MoreVertical className="h-5 w-5" />
                         </IconButton>
                       </TableCell>
@@ -216,7 +220,11 @@ export default function MyInvoicesPage() {
         </Paper>
       </Box>
 
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
         <MenuItem onClick={handleEditClick}>
           <Edit className="h-4 w-4 mr-2" />
           Edit
@@ -227,11 +235,15 @@ export default function MyInvoicesPage() {
         </MenuItem>
       </Menu>
 
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Delete Invoice</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this invoice? This action cannot be undone.
+            Are you sure you want to delete this invoice? This action cannot be
+            undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -242,8 +254,12 @@ export default function MyInvoicesPage() {
         </DialogActions>
       </Dialog>
 
-      <Toast open={toastOpen} onClose={() => setToastOpen(false)} message={toastMessage} severity={toastSeverity} />
+      <Toast
+        open={toastOpen}
+        onClose={() => setToastOpen(false)}
+        message={toastMessage}
+        severity={toastSeverity}
+      />
     </Layout>
-  )
+  );
 }
-

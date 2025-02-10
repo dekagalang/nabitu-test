@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "../../../../utils/mongodb";
 import { ObjectId } from "mongodb";
+import { INVOICE_STATUS } from "../../../../constants/invoice";
 
 export async function GET(
   request: Request,
@@ -36,6 +37,13 @@ export async function PUT(
     const client = await clientPromise;
     const db = client.db("nabitu_db");
     const body = await request.json();
+
+    if (body.status && !Object.values(INVOICE_STATUS).includes(body.status)) {
+      return NextResponse.json(
+        { error: "Invalid invoice status" },
+        { status: 400 }
+      );
+    }
 
     const result = await db
       .collection("invoices")
