@@ -25,17 +25,37 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 npm run build
 ```
 
-## Learn More
+# Project Documentation
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠 Teknologi yang Digunakan
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### **Frontend**
+- **React & Next.js**
+  - **React** dipilih karena arsitektur **berbasis komponen** yang memudahkan pengembangan.
+  - **Next.js** digunakan untuk **server-side rendering (SSR)** dan **API routes** bawaan untuk performa dan skalabilitas yang lebih baik.
 
-## Deploy on Vercel
+### **Database**
+- **MongoDB**
+  - **Struktur berbasis dokumen** memudahkan penyimpanan data invoice yang dinamis.
+  - **Skalabilitas tinggi** dan **performa optimal** untuk operasi baca yang banyak.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### **State Management & API Handling**
+- **Custom Hooks**
+  - Menggunakan **custom hooks** (`useInvoices`, `useInvoiceActions`) untuk **mengelola state & efek samping**.
+  - **Mengurangi duplikasi kode** dan meningkatkan **organisasi proyek**.
+- **API Structure**
+  - Mengikuti **prinsip RESTful**, dengan endpoint terpisah untuk **GET, POST, PUT, DELETE**.
+  - API **mudah digunakan** dan **siap untuk integrasi di masa depan**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
+### **Code Quality & Maintainability**
+- **Constants Management**
+  - Folder `constants` menyimpan **status invoice, API routes**, dan nilai tetap lainnya.
+  - **Konsistensi kode** lebih terjaga dan memudahkan pemeliharaan.
+- **Component Structure**
+  - UI dipisah menjadi **komponen reusable** (`Layout`, `Toast`, dll.).
+  - **Mempermudah pengelolaan** tampilan dan pengalaman pengguna.
+- **TypeScript**
+  - Menambahkan **static typing** untuk **mengurangi bug** dan **meningkatkan kualitas kode**.
+- **Material-UI (MUI)**
+  - Digunakan untuk **komponen UI pre-built** yang bisa disesuaikan.
+  - Mempercepat **pengembangan tampilan** yang modern dan responsif.
