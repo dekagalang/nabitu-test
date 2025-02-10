@@ -35,6 +35,7 @@ export default function AddInvoicePage() {
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [toastOpen, setToastOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const validateForm = () => {
     try {
@@ -58,11 +59,31 @@ export default function AddInvoicePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (validateForm()) {
-      setToastOpen(true)
-      setTimeout(() => {
-        setToastOpen(false)
-        router.push("/my-invoices")
-      }, 2000)
+      setIsSubmitting(true)
+      try {
+        const response = await fetch("/api/invoices", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to add invoice")
+        }
+
+        setToastOpen(true)
+        setTimeout(() => {
+          setToastOpen(false)
+          router.push("/my-invoices")
+        }, 2000)
+      } catch (error) {
+        console.error("Error adding invoice:", error)
+        // Handle error (e.g., show error toast)
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -192,8 +213,8 @@ export default function AddInvoicePage() {
                   {errors.status && <FormHelperText>{errors.status}</FormHelperText>}
                 </FormControl>
                 <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-                  <Button type="submit" variant="contained" size="large" sx={{ minWidth: 200 }}>
-                    + Add Invoice
+                  <Button type="submit" variant="contained" size="large" sx={{ minWidth: 200 }} disabled={isSubmitting}>
+                    {isSubmitting ? "Adding..." : "+ Add Invoice"}
                   </Button>
                 </Box>
               </Box>
